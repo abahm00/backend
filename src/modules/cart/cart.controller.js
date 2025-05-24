@@ -78,7 +78,6 @@ export const getCart = handleError(async (req, res) => {
 export const applyCoupon = handleError(async (req, res, next) => {
   const { code } = req.body;
 
-  // 1. Find coupon by code and check expiry
   const coupon = await Coupon.findOne({
     code: code?.trim().toUpperCase(),
     expires: { $gt: Date.now() },
@@ -88,13 +87,11 @@ export const applyCoupon = handleError(async (req, res, next) => {
     return res.status(400).json({ message: "Invalid or expired coupon code" });
   }
 
-  // 2. Get user's cart
   let cart = await Cart.findOne({ user: req.user._id });
   if (!cart) {
     return res.status(404).json({ message: "Cart not found" });
   }
 
-  // 3. Apply coupon to cart
   cart.coupon = coupon._id;
   cart.discount = coupon.discount;
   cart.totalPriceAfterDiscount =
@@ -102,7 +99,6 @@ export const applyCoupon = handleError(async (req, res, next) => {
 
   await cart.save();
 
-  // 4. Refetch cart with populated product data
   cart = await Cart.findOne({ user: req.user._id }).populate(
     "cartItems.product"
   );

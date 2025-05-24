@@ -5,7 +5,7 @@ import { handleError } from "../../middlewares/catchError.js";
 async function hasUserPurchasedProduct(userId, productId) {
   const orders = await Order.find({
     user: userId,
-    isPaid: true, // only consider paid orders
+    isPaid: true,
     "orderItems.product": productId,
   });
   return orders.length > 0;
@@ -13,21 +13,18 @@ async function hasUserPurchasedProduct(userId, productId) {
 
 export const addReview = async (req, res) => {
   try {
-    const userId = req.user._id; // assuming req.user is set by auth middleware
+    const userId = req.user._id;
     const { product: productId, rating, comment = "" } = req.body;
 
-    // Validate rating
     if (typeof rating !== "number" || rating < 0 || rating > 5) {
       return res.status(400).json({ message: "Invalid rating value" });
     }
 
-    // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Check if user purchased this product
     const purchased = await hasUserPurchasedProduct(userId, productId);
     if (!purchased) {
       return res.status(403).json({
@@ -35,7 +32,6 @@ export const addReview = async (req, res) => {
       });
     }
 
-    // Check if user already reviewed this product
     const existingReview = product.reviews.find(
       (review) => review.user.toString() === userId.toString()
     );
@@ -45,10 +41,8 @@ export const addReview = async (req, res) => {
         .json({ message: "You have already reviewed this product" });
     }
 
-    // Add review
     product.reviews.push({ user: userId, rating, comment });
 
-    // Update avg rating and count
     const totalRatings = product.reviews.reduce((sum, r) => sum + r.rating, 0);
     product.rateCount = product.reviews.length;
     product.rateAvg = totalRatings / product.rateCount;

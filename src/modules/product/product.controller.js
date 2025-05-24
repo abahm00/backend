@@ -44,12 +44,10 @@ export const updateProduct = handleError(async (req, res, next) => {
     return next(new Error("doesn't exist"));
   }
 
-  // If a new image was uploaded, replace it
   if (req.files?.imgCover) {
     req.body.imgCover = req.files.imgCover[0].filename;
   }
 
-  // Handle slug update
   if (req.body.title) {
     req.body.slug = slugify(req.body.title);
   }

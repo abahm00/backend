@@ -21,7 +21,6 @@ export const updateCategory = async (req, res) => {
     req.body.slug = slugify(req.body.name);
   }
 
-  // Handle image update if a new file is uploaded
   if (req.file) {
     req.body.img = req.file.filename;
   }

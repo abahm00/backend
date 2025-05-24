@@ -9,7 +9,6 @@ const stripe = new Stripe(
 );
 
 export const createCashOrder = handleError(async (req, res, next) => {
-  // Populate product details for cart items
   let cart = await Cart.findById(req.params.id).populate("cartItems.product");
   if (!cart) {
     return next(new Error("Cart not found"));
@@ -24,7 +23,6 @@ export const createCashOrder = handleError(async (req, res, next) => {
   });
   await order.save();
 
-  // Prepare bulk update for stock and sold count
   let options = cart.cartItems.map((item) => {
     return {
       updateOne: {
@@ -48,13 +46,11 @@ export const createCashOrder = handleError(async (req, res, next) => {
 
 export const createCheckoutSession = handleError(async (req, res, next) => {
   try {
-    // Populate product details for cart items
     let cart = await Cart.findById(req.params.id).populate("cartItems.product");
     if (!cart) {
       return next(new Error("Cart not found"));
     }
 
-    // Build Stripe line items
     const line_items = cart.cartItems.map((item) => ({
       price_data: {
         currency: "usd",
@@ -66,7 +62,6 @@ export const createCheckoutSession = handleError(async (req, res, next) => {
       quantity: item.quantity,
     }));
 
-    // Convert shipping address values to strings for metadata
     let metadata = {};
     if (
       req.body.shippingAddress &&
@@ -80,7 +75,6 @@ export const createCheckoutSession = handleError(async (req, res, next) => {
       );
     }
 
-    // Create Stripe checkout session
     let session = await stripe.checkout.sessions.create({
       line_items,
       mode: "payment",
